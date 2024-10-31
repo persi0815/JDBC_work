@@ -17,6 +17,10 @@ public class EmployeeView {
         System.out.print("입력 : ");
     }
 
+    public void showExitMessage() {
+        System.out.println("프로그램을 종료합니다.");
+    }
+
     public List<String> selectAttributes() {
         List<String> attributes = new ArrayList<>();
         System.out.println("\n====== 출력할 attribute 항목을 선택하세요 (콤마로 구분) ======");
@@ -48,13 +52,9 @@ public class EmployeeView {
         return sc.nextLine();
     }
 
-    public void showExitMessage() {
-        System.out.println("프로그램을 종료합니다.");
-    }
-
     public String selectGroupCriteria() {
         System.out.println("\n====== 그룹 평균 급여를 계산할 기준을 선택하세요 ======");
-        System.out.println("1. 성별\n2. 부서\n3. 상급자\n0. 그룹 없음");
+        System.out.println("1. 성별\n2. 부서\n3. 상급자\n");
         System.out.print("입력 : ");
         int choice = scanner.nextInt();
         scanner.nextLine();
