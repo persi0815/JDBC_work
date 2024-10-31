@@ -9,7 +9,7 @@ import java.util.Scanner;
 import view.EmployeeView;
 
 public class EmployeeService {
-    private static Scanner scanner = new Scanner(System.in);
+    private static final Scanner scanner = new Scanner(System.in);
 
     // 보고서 전체 -> 출력
     public void printAllEmployees(Statement stmt, List<String> selectedAttributes) throws SQLException {
@@ -136,11 +136,11 @@ public class EmployeeService {
     }
 
     public static String getSalaryStatement(String minSalary, String maxSalary) {
-        if (minSalary.equals("") && maxSalary.equals("")) {
+        if (minSalary.isEmpty() && maxSalary.isEmpty()) {
             return "";
-        } else if (minSalary.equals("")) {
+        } else if (minSalary.isEmpty()) {
             return "where Salary <= " + maxSalary;
-        } else if (maxSalary.equals("")) {
+        } else if (maxSalary.isEmpty()) {
             return "where " + minSalary + " <= Salary";
         } else {
             return "where " + minSalary + " <= Salary  and Salary <= " + maxSalary;

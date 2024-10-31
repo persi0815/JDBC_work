@@ -18,6 +18,7 @@ public class EmployeeController {
 
     public void run() throws SQLException {
         Connection conn = DatabaseConnection.getConnection();
+        assert conn != null;
         Statement stmt = conn.createStatement();
 
         List<String> selectedAttributes = employeeView.selectAttributes();
@@ -38,10 +39,11 @@ public class EmployeeController {
                         String groupCriteria = employeeView.selectGroupCriteria();
                         employeeService.printAverageSalaryByGroup(stmt, groupCriteria);
                     }
-                    case 0 -> employeeView.showExitMessage();
-                    default -> {
-                        System.out.println("유효하지 않은 번호입니다. 다시 입력하세요.");
+                    case 0 -> {
+                        employeeView.showExitMessage();
+                        return;
                     }
+                    default -> System.out.println("유효하지 않은 번호입니다. 다시 입력하세요.");
                 }
             } catch (InputMismatchException e) {
                 System.out.println("잘못된 입력입니다. 숫자를 입력하세요.");
