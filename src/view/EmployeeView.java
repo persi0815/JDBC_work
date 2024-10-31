@@ -13,7 +13,7 @@ public class EmployeeView {
 
     public void showMenu() {
         System.out.println("\n====== 원하는 작업의 번호를 선택하세요 ======");
-        System.out.println("1. 보고서 출력\n2. 조건 검색\n3. 조건 삭제\n4. 단일 삭제\n5. 직원 추가\n0. 프로그램 종료");
+        System.out.println("1. 보고서 출력\n2. 조건 검색\n3. 조건 삭제\n4. 단일 삭제\n5. 직원 추가\n6. 그룹별 평균 급여 출력\n0. 프로그램 종료");
         System.out.print("입력 : ");
     }
 
@@ -51,6 +51,39 @@ public class EmployeeView {
     public void showExitMessage() {
         System.out.println("프로그램을 종료합니다.");
     }
+
+    public String selectGroupCriteria() {
+        System.out.println("\n====== 그룹 평균 급여를 계산할 기준을 선택하세요 ======");
+        System.out.println("1. 성별\n2. 부서\n3. 상급자\n0. 그룹 없음");
+        System.out.print("입력 : ");
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        return switch (choice) {
+            case 1 -> "Sex";
+            case 2 -> "Dname";
+            case 3 -> "Super_ssn";
+            default -> "";
+        };
+    }
+
+    public static void displayGroupedAverageSalary(String sql, Statement stmt, String result) throws SQLException {
+        System.out.println(result);
+        System.out.println("-------------------------------------");
+        System.out.printf("| %-19s | %-10s |\n", "기준", "AVG SALARY");
+        System.out.println("-------------------------------------");
+
+        try (ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String criteria = rs.getString("기준");
+                double avgSalary = rs.getDouble("AvgSalary");
+
+                System.out.printf("| %-20s | %-10.2f |\n", criteria, avgSalary);
+            }
+        }
+        System.out.println("-------------------------------------");
+    }
+
 
     public static void executeQueryAndDisplayEmployee(String sql, Statement stmt, List<String> selectedAttributes,
                                                       String result) throws SQLException {

@@ -233,4 +233,37 @@ public class EmployeeService {
         return "'" + attribute + "'";
     }
 
+    public void printAverageSalaryByGroup(Statement stmt, String groupCriteria) throws SQLException {
+        String sql;
+        String resultTitle;
+
+        switch (groupCriteria) {
+            case "Sex" -> {
+                sql = "SELECT Sex AS 기준, AVG(Salary) AS AvgSalary FROM employee GROUP BY Sex";
+                resultTitle = "< 성별 그룹별 평균 급여 >";
+            }
+            case "Dname" -> {
+                sql = """
+                        SELECT D.Dname AS 기준, AVG(E.Salary) AS AvgSalary
+                        FROM employee E
+                        JOIN department D ON E.Dno = D.Dnumber
+                        GROUP BY D.Dname
+                        """;
+                resultTitle = "< 부서 그룹별 평균 급여 >";
+            }
+            case "Super_ssn" -> {
+                sql = "SELECT Super_ssn AS 기준, AVG(Salary) AS AvgSalary FROM employee GROUP BY Super_ssn";
+                resultTitle = "< 상급자 그룹별 평균 급여 >";
+            }
+            default -> {
+                System.out.println("유효하지 않은 그룹 기준입니다.");
+                return;
+            }
+        }
+
+        // 결과 출력
+        EmployeeView.displayGroupedAverageSalary(sql, stmt, resultTitle);
+    }
+
+
 }

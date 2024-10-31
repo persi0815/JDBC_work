@@ -34,6 +34,10 @@ public class EmployeeController {
                     case 3 -> employeeService.deleteEmployeeWithCondition(stmt, selectedAttributes);
                     case 4 -> employeeService.deleteEmployeeBySsn(stmt, selectedAttributes);
                     case 5 -> employeeService.addNewEmployee(stmt, selectedAttributes);
+                    case 6 -> {
+                        String groupCriteria = employeeView.selectGroupCriteria();
+                        employeeService.printAverageSalaryByGroup(stmt, groupCriteria);
+                    }
                     case 0 -> employeeView.showExitMessage();
                     default -> {
                         System.out.println("유효하지 않은 번호입니다. 다시 입력하세요.");
