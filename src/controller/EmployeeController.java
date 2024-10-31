@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 import model.DatabaseConnection;
 import model.EmployeeService;
@@ -14,9 +15,12 @@ public class EmployeeController {
     private final EmployeeView employeeView = new EmployeeView();
     private static final Scanner scanner = new Scanner(System.in);
 
+
     public void run() throws SQLException {
         Connection conn = DatabaseConnection.getConnection();
         Statement stmt = conn.createStatement();
+
+        List<String> selectedAttributes = employeeView.selectAttributes();
 
         while (true) {
             employeeView.showMenu();
@@ -25,11 +29,11 @@ public class EmployeeController {
                 scanner.nextLine();
 
                 switch (choice) {
-                    case 1 -> employeeService.printAllEmployees(stmt);
-                    case 2 -> employeeService.printEmployeeWithCondition(stmt);
-                    case 3 -> employeeService.deleteEmployeeWithCondition(stmt);
-                    case 4 -> employeeService.deleteEmployeeBySsn(stmt);
-                    case 5 -> employeeService.addNewEmployee(stmt);
+                    case 1 -> employeeService.printAllEmployees(stmt, selectedAttributes);
+                    case 2 -> employeeService.printEmployeeWithCondition(stmt, selectedAttributes);
+                    case 3 -> employeeService.deleteEmployeeWithCondition(stmt, selectedAttributes);
+                    case 4 -> employeeService.deleteEmployeeBySsn(stmt, selectedAttributes);
+                    case 5 -> employeeService.addNewEmployee(stmt, selectedAttributes);
                     case 0 -> employeeView.showExitMessage();
                     default -> {
                         System.out.println("유효하지 않은 번호입니다. 다시 입력하세요.");

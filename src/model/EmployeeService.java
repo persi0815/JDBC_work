@@ -4,6 +4,7 @@ import static view.EmployeeView.getAttribute;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Scanner;
 import view.EmployeeView;
 
@@ -11,13 +12,13 @@ public class EmployeeService {
     private static Scanner scanner = new Scanner(System.in);
 
     // 보고서 전체 -> 출력
-    public void printAllEmployees(Statement stmt) throws SQLException {
+    public void printAllEmployees(Statement stmt, List<String> selectedAttributes) throws SQLException {
         String sql = "select * from employee E join department D on E.Dno = D.Dnumber";
-        EmployeeView.executeQueryAndDisplayEmployee(sql, stmt, "< 보고서 출력 결과 - EMPLOYEE TABLE >");
+        EmployeeView.executeQueryAndDisplayEmployee(sql, stmt, selectedAttributes, "< 보고서 출력 결과 - EMPLOYEE TABLE >");
     }
 
     // 조건 검색 -> 출력
-    public void printEmployeeWithCondition(Statement stmt) throws SQLException {
+    public void printEmployeeWithCondition(Statement stmt, List<String> selectedAttributes) throws SQLException {
         String attribute = getAttribute("검색");
         String sql = "select * from employee E join department D on E.Dno = D.Dnumber ";
         sql = getSql(attribute, sql);
@@ -26,11 +27,11 @@ public class EmployeeService {
             sql = "select * from employee E join department D on E.Dno = D.Dnumber ";
             sql = getSql(attribute, sql);
         }
-        EmployeeView.executeQueryAndDisplayEmployee(sql, stmt, "< 조건 검색 결과 - EMPLOYEE TABLE >");
+        EmployeeView.executeQueryAndDisplayEmployee(sql, stmt, selectedAttributes, "< 조건 검색 결과 - EMPLOYEE TABLE >");
     }
 
     // 조건 삭제 -> 나머지 출력
-    public void deleteEmployeeWithCondition(Statement stmt) throws SQLException {
+    public void deleteEmployeeWithCondition(Statement stmt, List<String> selectedAttributes) throws SQLException {
         String attribute = getAttribute("삭제");
         String sql = "delete from employee ";
         sql = getSql(attribute, sql);
@@ -40,11 +41,11 @@ public class EmployeeService {
         }
         int affectedTuples = stmt.executeUpdate(sql);
         System.out.println("--- " + affectedTuples + "개의 행이 삭제되었습니다 ---");
-        displayEmployee(stmt, "< 조건 삭제 결과 - EMPLOYEE TABLE >");
+        displayEmployee(stmt, selectedAttributes, "< 조건 삭제 결과 - EMPLOYEE TABLE >");
     }
 
     // ssn으로 단일 삭제 -> 나머지 출력
-    public void deleteEmployeeBySsn(Statement stmt) throws SQLException {
+    public void deleteEmployeeBySsn(Statement stmt, List<String> selectedAttributes) throws SQLException {
         System.out.println("\n======= 삭제할 직원의 Ssn을 입력하세요. =======");
         System.out.print("입력 : ");
         String Ssn = scanner.nextLine();
@@ -55,7 +56,7 @@ public class EmployeeService {
         } else {
             System.out.println("--- 삭제 된 직원이 없습니다 ---");
         }
-        displayEmployee(stmt, "< 단일 삭제 결과 - EMPLOYEE TABLE >");
+        displayEmployee(stmt, selectedAttributes, "< 단일 삭제 결과 - EMPLOYEE TABLE >");
     }
 
     // 받은 attribute 종류와, attribute 값에 맞는 sql 반환
@@ -164,13 +165,14 @@ public class EmployeeService {
         }
     }
 
-    public void displayEmployee(Statement stmt, String result) throws SQLException { // 삭제 연산 이후
+    public void displayEmployee(Statement stmt, List<String> selectedAttributes, String result)
+            throws SQLException { // 삭제 연산 이후
         String sql = "select * from employee E join department D on E.Dno = D.Dnumber";
-        EmployeeView.executeQueryAndDisplayEmployee(sql, stmt, result);
+        EmployeeView.executeQueryAndDisplayEmployee(sql, stmt, selectedAttributes, result);
     }
 
     // 직원 추가
-    public void addNewEmployee(Statement stmt) throws SQLException {
+    public void addNewEmployee(Statement stmt, List<String> selectedAttributes) throws SQLException {
         System.out.println("--- 추가할 직원 정보를 입력하세요 ---");
         System.out.print("이름(Fname): ");
         String firstName = scanner.nextLine();
@@ -197,7 +199,7 @@ public class EmployeeService {
         String sql = getInsertQuery(firstName, initial, lastName, ssn, birthDate, address, sex, salary, supervisorSsn,
                 departmentNo);
         addEmployee(stmt, sql);
-        displayEmployee(stmt, "< 직원 추가 결과 - EMPLOYEE TABLE >");
+        displayEmployee(stmt, selectedAttributes, "< 직원 추가 결과 - EMPLOYEE TABLE >");
     }
 
     public void addEmployee(Statement stmt, String sql) {
