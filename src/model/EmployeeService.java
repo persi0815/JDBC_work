@@ -198,23 +198,17 @@ public class EmployeeService {
         System.out.print("부서 번호(Dno): ");
         String departmentNo = scanner.nextLine();
 
-        String sql = getInsertQuery(firstName, initial, lastName, ssn, birthDate, address, sex, salary, supervisorSsn,
-                departmentNo);
-        addEmployee(stmt, sql);
-        displayEmployee(stmt, selectedAttributes, "< 직원 추가 결과 - EMPLOYEE TABLE >");
-    }
-
-    public void addEmployee(Statement stmt, String sql) {
+        String sql = getInsertQuery(firstName, initial, lastName, ssn, birthDate, address, sex, salary, supervisorSsn, departmentNo);
         try {
             stmt.executeUpdate(sql);
             System.out.println("직원이 성공적으로 추가되었습니다.");
         } catch (SQLException e) {
             System.out.println("직원 추가 연산에서 오류가 발생했습니다.");
         }
+        displayEmployee(stmt, selectedAttributes, "< 직원 추가 결과 - EMPLOYEE TABLE >");
     }
 
-    private static String getInsertQuery(String fName, String mInit, String lName, String ssn, String bDate,
-                                         String address, String sex, double salary,
+    private static String getInsertQuery(String fName, String mInit, String lName, String ssn, String bDate, String address, String sex, double salary,
                                          String superSsn, String dNo) {
         return "insert into employee values("
                 + getBrace(fName) + ","
