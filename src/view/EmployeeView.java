@@ -47,7 +47,7 @@ public class EmployeeView {
     public static String getAttribute(String option) {
         Scanner sc = new Scanner(System.in);
         System.out.println("\n======= " + option + "할 조건의 attribute를 입력하세요 =======");
-        System.out.println("1. Sex\n2. Salary\n3. Department Name");
+        System.out.println("1. Sex\n2. Salary\n3. Department Name\n0. 전체");
         System.out.print("입력 : ");
         return sc.nextLine();
     }

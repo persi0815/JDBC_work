@@ -22,7 +22,7 @@ public class EmployeeService {
         String attribute = getAttribute("검색");
         String sql = "select * from employee E join department D on E.Dno = D.Dnumber ";
         sql = getSql(attribute, sql);
-        while (sql.equals("else")) { // 재입력
+        while (sql.equals("")) { // 재입력
             attribute = getAttribute("검색");
             sql = "select * from employee E join department D on E.Dno = D.Dnumber ";
             sql = getSql(attribute, sql);
@@ -35,13 +35,15 @@ public class EmployeeService {
         String attribute = getAttribute("삭제");
         String sql = "delete from employee ";
         sql = getSql(attribute, sql);
-        while (sql.equals("else")) { // 재입력
-            attribute = getAttribute("삭제");
-            sql = getSql(attribute, sql);
+        int affectedTuples = 0;
+        try{
+            affectedTuples = stmt.executeUpdate(sql);
+        } catch (SQLException e){
+            System.out.println("0~3 중에 선택바랍니다.");
+        } finally {
+            System.out.println("--- " + affectedTuples + "개의 행이 삭제되었습니다 ---");
+            displayEmployee(stmt, selectedAttributes, "< 조건 삭제 결과 - EMPLOYEE TABLE >");
         }
-        int affectedTuples = stmt.executeUpdate(sql);
-        System.out.println("--- " + affectedTuples + "개의 행이 삭제되었습니다 ---");
-        displayEmployee(stmt, selectedAttributes, "< 조건 삭제 결과 - EMPLOYEE TABLE >");
     }
 
     // 4. ssn으로 단일 삭제 -> 나머지 출력
@@ -72,7 +74,7 @@ public class EmployeeService {
         } else if (attribute.equalsIgnoreCase("전체") || attribute.equals("0")) {
             sql = sql;
         } else {
-            sql = "else";
+            sql = "";
         }
 
         return sql;
@@ -130,7 +132,7 @@ public class EmployeeService {
         } else if (value.equalsIgnoreCase("f") || value.equalsIgnoreCase("female") || value.equals("2")) {
             value = "'F'";
         } else {
-            value = "else";
+            value = "";
         }
         return value;
     }
@@ -155,10 +157,10 @@ public class EmployeeService {
         } else if (value.equalsIgnoreCase("headquarters") || value.equals("3")) {
             value = "'Headquarters'";
         } else {
-            value = "else";
+            value = "";
         }
 
-        if (!value.equals("else")) {
+        if (!value.equals("")) {
             return "(select Dnumber from department where Dname = " + value + ")";
         } else {
             return value;
