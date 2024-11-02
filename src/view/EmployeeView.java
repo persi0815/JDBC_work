@@ -13,7 +13,7 @@ public class EmployeeView {
 
     public void showMenu() {
         System.out.println("\n====== 원하는 작업의 번호를 선택하세요 ======");
-        System.out.println("1. 보고서 출력\n2. 조건 검색\n3. 조건 삭제\n4. 단일 삭제\n5. 직원 추가\n6. 그룹별 평균 급여 출력\n0. 프로그램 종료");
+        System.out.println("1. 보고서 출력\n2. 조건 검색\n3. 조건 삭제\n4. 단일 삭제\n5. 직원 추가\n6. 그룹별 평균 급여 출력\n7. 뷰 관리\n0. 프로그램 종료");
         System.out.print("입력 : ");
     }
 

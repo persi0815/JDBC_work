@@ -15,6 +15,8 @@ public class EmployeeController {
     private final EmployeeView employeeView = new EmployeeView();
     private static final Scanner scanner = new Scanner(System.in);
 
+    private final ViewController viewController = new ViewController();
+
 
     public void run() throws SQLException {
         Connection conn = DatabaseConnection.getConnection();
@@ -39,6 +41,7 @@ public class EmployeeController {
                         String groupCriteria = employeeView.selectGroupCriteria();
                         employeeService.printAverageSalaryByGroup(stmt, groupCriteria);
                     }
+                    case 7 -> viewController.manageView();
                     case 0 -> {
                         employeeView.showExitMessage();
                         return;
