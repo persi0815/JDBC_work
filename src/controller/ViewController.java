@@ -2,10 +2,9 @@ package controller;
 
 import model.DatabaseConnection;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Scanner;
 
 import static java.io.File.separator;
@@ -306,6 +305,164 @@ public class ViewController {
     }
 
 
+    // 13. 직원의 부서 이동 기능
+    public void transferEmployeeDepartment() {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement checkDepartmentStmt = connection.prepareStatement("SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?");
+             PreparedStatement checkCurrentDepartmentStmt = connection.prepareStatement("SELECT Dno, Fname, Lname FROM EMPLOYEE WHERE Ssn = ?");
+             PreparedStatement updateEmployeeStmt = connection.prepareStatement("UPDATE EMPLOYEE SET Dno = ? WHERE Ssn = ?")) {
+
+            System.out.println("===== 부서를 이동할 직원의 SSN을 입력하세요 =====");
+            String employeeSsn = scanner.nextLine().trim();
+            System.out.println("===== 이동할 부서명을 입력하세요 =====");
+            String newDepartment = scanner.nextLine().trim();
+
+            // 현재 부서 확인 및 직원 이름 조회
+            checkCurrentDepartmentStmt.setString(1, employeeSsn);
+            ResultSet currentDeptResultSet = checkCurrentDepartmentStmt.executeQuery();
+
+            if (currentDeptResultSet.next()) {
+                int currentDepartmentNumber = currentDeptResultSet.getInt("Dno");
+                String firstName = currentDeptResultSet.getString("Fname");
+                String lastName = currentDeptResultSet.getString("Lname");
+
+                // 부서 유효성 검사 및 Dnumber 조회
+                checkDepartmentStmt.setString(1, newDepartment);
+                ResultSet newDeptResultSet = checkDepartmentStmt.executeQuery();
+
+                if (newDeptResultSet.next()) {
+                    int newDepartmentNumber = newDeptResultSet.getInt("Dnumber");
+
+                    // 현재 부서와 이동하려는 부서가 같은지 확인
+                    if (currentDepartmentNumber == newDepartmentNumber) {
+                        System.out.println("현재 속한 부서와 이동하려는 부서가 같습니다.");
+                        return; // 메서드 종료
+                    }
+
+                    // 직원의 부서 정보 업데이트
+                    updateEmployeeStmt.setInt(1, newDepartmentNumber);
+                    updateEmployeeStmt.setString(2, employeeSsn);
+                    int rowsAffected = updateEmployeeStmt.executeUpdate();
+
+                    if (rowsAffected > 0) {
+                        System.out.printf("직원 %s(%s %s)의 부서가 %s로 변경되었습니다.\n", employeeSsn, firstName, lastName, newDepartment);
+                    } else {
+                        System.out.println("해당 직원이 존재하지 않습니다.");
+                    }
+                } else {
+                    System.out.println("입력한 부서가 존재하지 않습니다.");
+                }
+            } else {
+                System.out.println("해당 직원이 존재하지 않습니다.");
+            }
+        } catch (Exception error) {
+            System.out.println("부서 이동 중 오류가 발생했습니다: " + error.getMessage());
+        }
+    }
+
+
+    // 14. 부서별 최대/최소 급여 및 해당 직원 정보 조회
+    public void maxMinSalaryByDepartment() {
+        try (Connection connection = DatabaseConnection.getConnection();
+             Statement statement = connection.createStatement()) {
+
+            // 부서별 최대 및 최소 급여 조회
+            String salaryQuery = "SELECT D.Dname AS Department, MAX(E.Salary) AS MaxSalary, MIN(E.Salary) AS MinSalary " +
+                    "FROM EMPLOYEE E " +
+                    "JOIN DEPARTMENT D ON E.Dno = D.Dnumber " +
+                    "GROUP BY D.Dname";
+
+            ResultSet salaryResultSet = statement.executeQuery(salaryQuery);
+
+            System.out.println("===== 부서별 최대/최소 급여 및 해당 직원 정보 =====");
+
+            while (salaryResultSet.next()) {
+                String department = salaryResultSet.getString("Department");
+                double maxSalary = salaryResultSet.getDouble("MaxSalary");
+                double minSalary = salaryResultSet.getDouble("MinSalary");
+
+                // 최대 급여를 가진 직원 정보 조회
+                String maxSalaryQuery = "SELECT Fname, Lname, Ssn, Salary FROM EMPLOYEE WHERE Salary = ? AND Dno = " +
+                        "(SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?)";
+                try (PreparedStatement maxSalaryStmt = connection.prepareStatement(maxSalaryQuery)) {
+                    maxSalaryStmt.setDouble(1, maxSalary);
+                    maxSalaryStmt.setString(2, department);
+                    ResultSet maxSalaryResultSet = maxSalaryStmt.executeQuery();
+
+                    // 최대 급여 직원 정보 출력
+                    if (maxSalaryResultSet.next()) {
+                        String maxFname = maxSalaryResultSet.getString("Fname");
+                        String maxLname = maxSalaryResultSet.getString("Lname");
+                        String maxSsn = maxSalaryResultSet.getString("Ssn");
+                        System.out.printf("부서: %s, 최대 급여: %.2f, 직원: %s %s (ssn: %s)\n", department, maxSalary, maxFname, maxLname, maxSsn);
+                    }
+                }
+
+                // 최소 급여를 가진 직원 정보 조회
+                String minSalaryQuery = "SELECT Fname, Lname, Ssn, Salary FROM EMPLOYEE WHERE Salary = ? AND Dno = " +
+                        "(SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?)";
+                try (PreparedStatement minSalaryStmt = connection.prepareStatement(minSalaryQuery)) {
+                    minSalaryStmt.setDouble(1, minSalary);
+                    minSalaryStmt.setString(2, department);
+                    ResultSet minSalaryResultSet = minSalaryStmt.executeQuery();
+
+                    // 최소 급여 직원 정보 출력
+                    if (minSalaryResultSet.next()) {
+                        String minFname = minSalaryResultSet.getString("Fname");
+                        String minLname = minSalaryResultSet.getString("Lname");
+                        String minSsn = minSalaryResultSet.getString("Ssn");
+                        System.out.printf("부서: %s, 최소 급여: %.2f, 직원: %s %s (ssn: %s)\n", department, minSalary, minFname, minLname, minSsn);
+                    }
+                }
+            }
+        } catch (Exception error) {
+            System.out.println("부서별 급여 조회 중 오류가 발생했습니다: " + error.getMessage());
+        }
+    }
+
+
+    // 15. 부서 별 직원 목록 조회
+    public void listEmployeesByDepartment() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("===== 조회할 부서 이름을 입력하세요 =====");
+        String departmentName = scanner.nextLine().trim(); // 부서 이름 입력받기
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT Dnumber FROM DEPARTMENT WHERE Dname = ?")) {
+
+            statement.setString(1, departmentName);
+            ResultSet departmentResultSet = statement.executeQuery();
+
+            if (departmentResultSet.next()) {
+                int departmentNumber = departmentResultSet.getInt("Dnumber");
+
+                // 부서 번호로 직원 목록 조회
+                try (PreparedStatement employeeStatement = connection.prepareStatement("SELECT Fname, Lname, Ssn, Salary FROM EMPLOYEE WHERE Dno = ?")) {
+                    employeeStatement.setInt(1, departmentNumber);
+                    ResultSet resultSet = employeeStatement.executeQuery();
+
+                    // 표 출력 시작
+                    System.out.println("---------------------------------------------------------------------");
+                    System.out.printf("| %-10s | %-17s | %-16s | %-11s |\n", "SSN", "이름", "성", "급여");
+                    System.out.println("---------------------------------------------------------------------");
+
+                    while (resultSet.next()) {
+                        String ssn = resultSet.getString("Ssn");
+                        String firstName = resultSet.getString("Fname");
+                        String lastName = resultSet.getString("Lname");
+                        double salary = resultSet.getDouble("Salary");
+                        System.out.printf("| %-10s | %-18s | %-16s | %-12.2f |\n", ssn, firstName, lastName, salary);
+                    }
+
+                    System.out.println("---------------------------------------------------------------------");
+                }
+            } else {
+                System.out.println("입력한 부서가 존재하지 않습니다.");
+            }
+        } catch (Exception error) {
+            System.out.println("부서 정보를 조회하는 중 오류가 발생했습니다: " + error.getMessage());
+        }
+    }
 
 
 }
