@@ -51,6 +51,9 @@ public class EmployeeController {
                     case 10 -> employeeService.raiseEmployeeSalary();
                     case 11 -> employeeService.addDependent();
                     case 12 -> employeeService.addProject();
+                    case 13 -> viewController.transferEmployeeDepartment(); // 부서 이동 기능 호출
+                    case 14 -> viewController.maxMinSalaryByDepartment(); // 부서 별 최대/최소 급여 조회 기능 호출
+                    case 15 -> viewController.listEmployeesByDepartment(); // 부서 별 직원 목록 조회
                     case 0 -> {
                         employeeView.showExitMessage();
                         return;
