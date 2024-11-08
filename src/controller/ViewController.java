@@ -4,6 +4,7 @@ import model.DatabaseConnection;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
 
@@ -13,6 +14,7 @@ public class ViewController {
 
     private final Scanner scanner = new Scanner(System.in);
 
+    // @7번@ 뷰 관리 메뉴
     public void manageView() {
         while (true) {
             System.out.println("===== 뷰 작업을 선택하세요 =====");
@@ -89,6 +91,7 @@ public class ViewController {
                 selectColumns.setLength(selectColumns.length() - 1);
             }
 
+            // 테이블 join
             String makeQuery = String.format(
                     "CREATE VIEW %s AS SELECT %s FROM %s INNER JOIN %s ON %s",
                     viewName, selectColumns, table1, table2, joinCond
@@ -101,6 +104,8 @@ public class ViewController {
 
         }
     }
+
+
 
     // 특정 테이블의 컬럼 이름을 가져오기
     private String fetchColumnNames(Connection conn, String table) {
@@ -183,4 +188,124 @@ public class ViewController {
             System.out.println("뷰 조회 중 오류가 발생했습니다: " + error.getMessage());
         }
     }
+
+
+
+
+
+    // @8번@ 직원의 Ssn으로 상사 직원 검색 (recursive query)
+    public void findSupervisorBySsn(Connection conn, String employeeSsn) {
+
+        String sql = "SELECT Super_ssn FROM EMPLOYEE WHERE Ssn = '" + employeeSsn + "'";
+
+        try (Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery(sql)) {
+
+            if (rs.next()) {
+                String managerSsn = rs.getString("Super_ssn");
+
+                // 상사가 없는 경우
+                if (managerSsn == null || managerSsn.isBlank()) {
+                    System.out.println("이 직원은 상사가 없습니다.");
+                } else {
+                    boolean hasPrintedSupervisor = false; // 상사 정보가 출력되었는지 여부를 추적
+
+                    while (managerSsn != null && !managerSsn.isBlank()) {
+                        hasPrintedSupervisor = true; // 상사 정보가 출력됨
+                        printSupervisor(conn, managerSsn);
+
+                        // 다음 상사 조회
+                        sql = "SELECT Super_ssn FROM EMPLOYEE WHERE Ssn = '" + managerSsn + "'";
+                        try (Statement innerStatement = conn.createStatement();
+                             ResultSet innerRs = innerStatement.executeQuery(sql)) {
+                            if (innerRs.next()) {
+                                managerSsn = innerRs.getString("Super_ssn");
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+
+
+                    if (!hasPrintedSupervisor) {
+                        System.out.println("이 직원은 상사가 없습니다.");
+                    }
+                }
+            } else {
+                System.out.println("입력한 Ssn에 해당하는 직원을 찾을 수 없습니다.");
+            }
+        } catch (SQLException ex) {
+            System.out.println("상사 조회 중 오류 발생: " + ex.getMessage());
+        }
+    }
+
+    // 상사의 세부 정보를 출력하는
+    private void printSupervisor(Connection conn, String supervisorSsn) {
+        String sql = "SELECT Fname, Lname FROM EMPLOYEE WHERE Ssn = '" + supervisorSsn + "'";
+
+        try (Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery(sql)) {
+
+            if (rs.next()) {
+                System.out.printf("상사: %s %s (Ssn: %s)\n", rs.getString("Fname"), rs.getString("Lname"), supervisorSsn);
+            } else {
+                System.out.println("상사 정보를 찾을 수 없습니다.");
+            }
+        } catch (SQLException ex) {
+            System.out.println("상사 정보 조회 중 오류 발생: " + ex.getMessage());
+        }
+    }
+
+
+
+
+
+
+    // @9번@ 프로젝트 별 투입된 인건비
+    public void calculateProjectCost() {
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+
+            System.out.println("인건비를 계산할 프로젝트 번호를 입력하세요 (쉼표로 구분): ");
+            String input = scanner.nextLine().trim();
+            String[] projectNumbers = input.split(",");
+
+            for (String projectNum : projectNumbers) {
+                projectNum = projectNum.trim();
+
+                // 프로젝트 이름을 가져오는 쿼리
+                String nameQuery = String.format("SELECT Pname FROM PROJECT WHERE Pnumber = %s", projectNum);
+                ResultSet nameResult = stmt.executeQuery(nameQuery);
+
+                String projName = "";
+                if (nameResult.next()) {
+                    projName = nameResult.getString("Pname");
+                } else {
+                    System.out.printf("프로젝트 번호 %s는 존재하지 않습니다.\n", projectNum);
+                    continue;
+                }
+
+                // 프로젝트에 참여한 직원들의 Salary 합계 계산 (Hours가 0이거나 NULL인 경우 제외)
+                String salaryQuery = String.format(
+                        "SELECT SUM(E.Salary) AS TotalSalary FROM EMPLOYEE E " +
+                                "JOIN WORKS_ON W ON E.Ssn = W.Essn " +
+                                "WHERE W.Pno = %s AND W.Hours IS NOT NULL AND W.Hours > 0", projectNum
+                );
+
+                ResultSet salaryResult = stmt.executeQuery(salaryQuery);
+                if (salaryResult.next()) {
+                    double totalSalary = salaryResult.getDouble("TotalSalary");
+                    System.out.printf("%s의 총 인건비는 %.2f$입니다.\n", projName, totalSalary);
+                } else {
+                    System.out.printf("%s에 참여한 직원이 없습니다.\n", projName);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("인건비 계산 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+
+
+
 }

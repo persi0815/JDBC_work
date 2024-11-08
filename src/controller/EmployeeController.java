@@ -42,6 +42,12 @@ public class EmployeeController {
                         employeeService.printAverageSalaryByGroup(stmt, groupCriteria);
                     }
                     case 7 -> viewController.manageView();
+                    case 8 -> {
+                        System.out.println("상사를 조회할 직원의 Ssn을 입력하세요: ");
+                        String employeeSsn = scanner.nextLine().trim();
+                        viewController.findSupervisorBySsn(conn, employeeSsn);
+                    }
+                    case 9 -> viewController.calculateProjectCost();
                     case 0 -> {
                         employeeView.showExitMessage();
                         return;
