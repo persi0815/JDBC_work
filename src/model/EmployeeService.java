@@ -7,9 +7,179 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Scanner;
 import view.EmployeeView;
+import java.sql.ResultSet;
 
 public class EmployeeService {
     private static final Scanner scanner = new Scanner(System.in);
+
+    // 10. 직원 급여 인상
+    public void raiseEmployeeSalary() {
+        System.out.println("\n======= 급여 인상 대상 직원의 Ssn을 입력하세요 =======");
+        System.out.print("Ssn 입력: ");
+        String ssn = scanner.nextLine().trim();
+
+        System.out.print("인상률을 입력하세요 (예: 10을 입력하면 10% 인상): ");
+        double rate = scanner.nextDouble();
+        scanner.nextLine();
+
+        // Math.ceil을 사용하여 올림 처리하고 정수로 저장하게 했음.
+        String sql = String.format(
+                "UPDATE EMPLOYEE SET Salary = CEIL(Salary * (1 + %f / 100)) WHERE Ssn = '%s'",
+                rate, ssn
+        );
+
+        try (Statement stmt = DatabaseConnection.getConnection().createStatement()) {
+            int updatedRows = stmt.executeUpdate(sql);
+            if (updatedRows > 0) {
+                System.out.println("해당 직원의 급여가 인상되었습니다.");
+
+                // 결과로 인상된 직원 정보 출력
+                String resultSql = String.format(
+                        "SELECT Fname, Lname, Ssn, Salary FROM EMPLOYEE WHERE Ssn = '%s'", ssn
+                );
+                ResultSet rs = stmt.executeQuery(resultSql);
+                System.out.println("< 급여 인상 결과 - 대상 직원 >");
+                System.out.println("-------------------------------------------");
+                System.out.printf("| %-10s | %-10s | %-10s |\n", "이름", "직원번호", "Salary");
+                System.out.println("-------------------------------------------");
+
+                if (rs.next()) {
+                    String name = rs.getString("Fname") + " " + rs.getString("Lname");
+                    int salary = rs.getInt("Salary");
+                    System.out.printf("| %-10s | %-10s | %-10d |\n", name, rs.getString("Ssn"), salary);
+                }
+                System.out.println("-------------------------------------------");
+
+            } else {
+                System.out.println("직원을 찾을 수 없습니다.");
+            }
+        } catch (SQLException e) {
+            System.out.println("급여 인상 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    // 11. 부양가족 추가
+    public void addDependent() {
+        System.out.println("\n======= 부양가족을 추가할 직원의 Ssn을 입력하세요 =======");
+        System.out.print("Ssn 입력: ");
+        String ssn = scanner.nextLine().trim();
+
+        System.out.print("부양가족 이름: ");
+        String dependentName = scanner.nextLine().trim();
+        System.out.print("부양가족 성별 (M/F): ");
+        String sex = scanner.nextLine().trim();
+        System.out.print("부양가족 생년월일 (YYYY-MM-DD): ");
+        String bdate = scanner.nextLine().trim();
+        System.out.print("관계 (예: Son, Daughter, Spouse 등): ");
+        String relationship = scanner.nextLine().trim();
+
+        String sql = String.format(
+                "INSERT INTO DEPENDENT (Essn, Dependent_name, Sex, Bdate, Relationship) " +
+                        "VALUES ('%s', '%s', '%s', '%s', '%s')",
+                ssn, dependentName, sex, bdate, relationship
+        );
+
+        try (Statement stmt = DatabaseConnection.getConnection().createStatement()) {
+            stmt.executeUpdate(sql);
+            System.out.println("부양가족이 추가되었습니다.");
+
+            // 결과로 DEPENDENT 테이블 보여줌
+            String resultSql = "SELECT * FROM DEPENDENT";
+            ResultSet rs = stmt.executeQuery(resultSql);
+            System.out.println("< 부양가족 추가 결과 - DEPENDENT TABLE >");
+            System.out.println("-------------------------------------------------------------");
+            System.out.printf("| %-10s | %-15s | %-5s | %-10s | %-10s |\n",
+                    "Essn", "Dependent_name", "Sex", "Bdate", "Relationship");
+            System.out.println("-------------------------------------------------------------");
+
+            while (rs.next()) {
+                System.out.printf("| %-10s | %-15s | %-5s | %-10s | %-10s |\n",
+                        rs.getString("Essn"),
+                        rs.getString("Dependent_name"),
+                        rs.getString("Sex"),
+                        rs.getString("Bdate"),
+                        rs.getString("Relationship"));
+            }
+            System.out.println("-------------------------------------------------------------");
+
+        } catch (SQLException e) {
+            System.out.println("부양가족 추가 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    // 12. 프로젝트 추가
+    public void addProject() {
+        System.out.println("\n======= 추가할 새 프로젝트의 정보를 입력하세요 =======");
+        System.out.print("프로젝트 이름 (Pname): ");
+        String pname = scanner.nextLine().trim();
+        System.out.print("프로젝트 번호 (Pnumber): ");
+        int pnumber = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("프로젝트 위치 (Plocation): ");
+        String plocation = scanner.nextLine().trim();
+        System.out.print("부서 번호 (Dnum): ");
+        int dnum = scanner.nextInt();
+        scanner.nextLine();
+
+        String sql = String.format(
+                "INSERT INTO PROJECT (Pname, Pnumber, Plocation, Dnum) VALUES ('%s', %d, '%s', %d)",
+                pname, pnumber, plocation, dnum
+        );
+
+        try (Statement stmt = DatabaseConnection.getConnection().createStatement()) {
+            stmt.executeUpdate(sql);
+            System.out.println("프로젝트가 추가되었습니다.");
+
+            // 결과로 PROJECT 테이블 보여줌
+            String resultSql = "SELECT * FROM PROJECT";
+            ResultSet rs = stmt.executeQuery(resultSql);
+            System.out.println("< 프로젝트 추가 결과 - PROJECT TABLE >");
+            System.out.println("--------------------------------------------------");
+            System.out.printf("| %-15s | %-8s | %-10s | %-5s |\n", "Pname", "Pnumber", "Plocation", "Dnum");
+            System.out.println("--------------------------------------------------");
+
+            while (rs.next()) {
+                System.out.printf("| %-15s | %-8d | %-10s | %-5d |\n",
+                        rs.getString("Pname"),
+                        rs.getInt("Pnumber"),
+                        rs.getString("Plocation"),
+                        rs.getInt("Dnum"));
+            }
+            System.out.println("--------------------------------------------------");
+
+            System.out.print("새 프로젝트에 직원을 배치하겠습니까? (yes/no): ");
+            String assignEmployee = scanner.nextLine().trim();
+            if (assignEmployee.equalsIgnoreCase("yes")) {
+                System.out.print("새 프로젝트에 배치할 직원의 Ssn을 입력하세요: ");
+                String ssn = scanner.nextLine().trim();
+
+                String assignSql = String.format(
+                        "INSERT INTO WORKS_ON (Essn, Pno, Hours) VALUES ('%s', %d, 0)",
+                        ssn, pnumber
+                );
+                stmt.executeUpdate(assignSql);
+                System.out.println("직원이 새 프로젝트에 배치되었습니다.");
+
+                // 결과로 WORKS_ON 테이블도 보여줌
+                resultSql = "SELECT * FROM WORKS_ON";
+                rs = stmt.executeQuery(resultSql);
+                System.out.println("< 직원 배치 결과 - WORKS_ON TABLE >");
+                System.out.println("----------------------------------------");
+                System.out.printf("| %-10s | %-5s | %-5s |\n", "Essn", "Pno", "Hours");
+                System.out.println("----------------------------------------");
+
+                while (rs.next()) {
+                    System.out.printf("| %-10s | %-5d | %-5.1f |\n",
+                            rs.getString("Essn"),
+                            rs.getInt("Pno"),
+                            rs.getDouble("Hours"));
+                }
+                System.out.println("----------------------------------------");
+            }
+        } catch (SQLException e) {
+            System.out.println("프로젝트 추가 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 
     // 1. 보고서 전체 -> 출력
     public void printAllEmployees(Statement stmt, List<String> selectedAttributes) throws SQLException {

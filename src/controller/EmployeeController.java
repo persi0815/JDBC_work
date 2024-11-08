@@ -48,6 +48,9 @@ public class EmployeeController {
                         viewController.findSupervisorBySsn(conn, employeeSsn);
                     }
                     case 9 -> viewController.calculateProjectCost();
+                    case 10 -> employeeService.raiseEmployeeSalary();
+                    case 11 -> employeeService.addDependent();
+                    case 12 -> employeeService.addProject();
                     case 0 -> {
                         employeeView.showExitMessage();
                         return;
